@@ -1,0 +1,36 @@
+# config.yml.example
+
+primary:
+  env: local
+
+server:
+  port: 8080
+  read_timeout: 30
+  write_timeout: 30
+  idle_timeout: 60
+  cors_allowed_origins:
+    - "*"
+
+database:
+  host: localhost
+  port: 5432
+  user: username
+  password: password
+  name: database_name
+  ssl_mode: disable
+  max_open_conns: 20
+  max_idle_conns: 10
+  conn_max_lifetime: 300
+  conn_max_idle_time: 300
+
+redis:
+  address: redis://localhost:6379
+
+observability:
+  health_checks:
+    enabled: true
+    interval: 30s
+    timeout: 5s
+    checks:
+      - database
+      - redis

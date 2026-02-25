@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>smolurl</title>
+</head>
+
+<body>
+    <div class="main-container">
+        <h1 class="app-title">smol<span style="color: gainsboro;">url</span></h1>
+        <div class="link-container">
+            <label for="urlbox">Enter URL</label>
+            <input class="url-input-box" type="text" placeholder="enter url">
+            <div class="short-url"></div>
+            <button class="gen-btn">Generate</button>
+        </div>
+
+        <div>
+            <!-- expiration_time -->
+            <label for="exp-time">Expiration Time (in min)</label>
+            <select class="exp-time">
+                <option value="30">30</option>
+                <option value="60">60</option>
+            </select>
+        </div>
+    </div>
+</body>
+
+<script>
+    const urlInputElem = document.querySelector(".url-input-box")
+    urlInputElem.value = "https://www.freecodecamp.org/news/html-button-onclick-javascript-click-event-tutorial/"
+
+    const expTimeElem = document.querySelector(".exp-time")
+    let selectedExpTime = null
+    expTimeElem.addEventListener("change", (e) => {
+        selectedExpTime = e.target.value
+    })
+
+    const genBtn = document.querySelector(".gen-btn")
+    console.log(selectedExpTime)
+    genBtn.addEventListener("click", () => {
+        const url = urlInputElem.value
+        if (!url) {
+            alert("Please enter an url")
+        }
+        fetch("/url", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(
+                {
+                    "original_url": url,
+                    "expiration": selectedExpTime
+                }
+            )
+        })
+
+        console.log(url)
+    })
+
+</script>
+
+</html>
