@@ -21,6 +21,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 )
 
 require (

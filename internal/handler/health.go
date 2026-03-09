@@ -12,12 +12,12 @@ import (
 )
 
 type HealthHandler struct {
-	Handler
+	server *server.Server
 }
 
 func NewHealthHandler(s *server.Server) *HealthHandler {
 	return &HealthHandler{
-		Handler: NewHandler(s),
+		server: s,
 	}
 }
 

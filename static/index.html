@@ -34,19 +34,15 @@
     urlInputElem.value = "https://www.freecodecamp.org/news/html-button-onclick-javascript-click-event-tutorial/"
 
     const expTimeElem = document.querySelector(".exp-time")
-    let selectedExpTime = null
-    expTimeElem.addEventListener("change", (e) => {
-        selectedExpTime = e.target.value
-    })
 
     const genBtn = document.querySelector(".gen-btn")
-    console.log(selectedExpTime)
     genBtn.addEventListener("click", () => {
         const url = urlInputElem.value
+        const expiration = expTimeElem.value
         if (!url) {
             alert("Please enter an url")
         }
-        fetch("/url", {
+        fetch("/api/v1/url", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'
@@ -54,12 +50,10 @@
             body: JSON.stringify(
                 {
                     "original_url": url,
-                    "expiration": selectedExpTime
+                    "expiration_time": parseInt(expiration)
                 }
             )
         })
-
-        console.log(url)
     })
 
 </script>

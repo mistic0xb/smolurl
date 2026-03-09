@@ -10,7 +10,7 @@ type Handlers struct {
 	SmolURL *SmolURLHandler
 }
 
-func NewHandlers(s *server.Server, services *service.Service) *Handlers {
+func NewHandlers(s *server.Server, services *service.Services) *Handlers {
 	return &Handlers{
 		Health:  NewHealthHandler(s),
 		SmolURL: NewSmolURLHandler(s, services.SmolURL),
