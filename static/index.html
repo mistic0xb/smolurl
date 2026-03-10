@@ -14,13 +14,12 @@
         <div class="link-container">
             <label for="urlbox">Enter URL</label>
             <input class="url-input-box" type="text" placeholder="enter url">
-            <div class="short-url"></div>
             <button class="gen-btn">Generate</button>
         </div>
-
+        <div class="short-url"></div>
         <div>
             <!-- expiration_time -->
-            <label for="exp-time">Expiration Time (in min)</label>
+            <label for="exp-time">Expire In (in min)</label>
             <select class="exp-time">
                 <option value="30">30</option>
                 <option value="60">60</option>
@@ -32,17 +31,19 @@
 <script>
     const urlInputElem = document.querySelector(".url-input-box")
     urlInputElem.value = "https://www.freecodecamp.org/news/html-button-onclick-javascript-click-event-tutorial/"
+    const shortUrlElem = document.querySelector(".short-url")
+
 
     const expTimeElem = document.querySelector(".exp-time")
 
     const genBtn = document.querySelector(".gen-btn")
-    genBtn.addEventListener("click", () => {
+    genBtn.addEventListener("click", async () => {
         const url = urlInputElem.value
         const expiration = expTimeElem.value
         if (!url) {
             alert("Please enter an url")
         }
-        fetch("/api/v1/url", {
+        const res = await fetch("/api/v1/url", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'
@@ -54,6 +55,8 @@
                 }
             )
         })
+        const data = await res.json()
+        shortUrlElem.innerHTML = `<a href="${data.smol_url}" target="_blank">${data.smol_url}</a>`;
     })
 
 </script>

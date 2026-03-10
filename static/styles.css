@@ -8,8 +8,8 @@ body {
   height: 24px;
 }
 
-.app-title{
-    color: #b4edff;
+.app-title {
+  color: #b4edff;
 }
 
 .main-container {
@@ -20,11 +20,16 @@ body {
   align-items: center;
 }
 
-.link-container{
-    display: flex;
-    gap: 10px;
+.link-container {
+  display: flex;
+  gap: 10px;
 }
 
-.gen-btn{
-    background-color: rgb(197, 255, 197);
+.gen-btn {
+  background-color: rgb(197, 255, 197);
+}
+
+.short-url,
+a {
+  color: lightblue;
 }
