@@ -5,8 +5,10 @@ go 1.25.0
 require github.com/jackc/pgx-zerolog v0.0.0-20230315001418-f978528409eb
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/jxskiss/base62 v1.1.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
