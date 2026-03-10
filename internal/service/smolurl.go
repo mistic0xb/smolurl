@@ -1,9 +1,12 @@
 package service
 
 import (
+	"fmt"
+	"log"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/bwmarrin/snowflake"
+	"github.com/jxskiss/base62"
 	"github.com/labstack/echo/v4"
 	"github.com/mistic0xb/smolurl/internal/model/smolurl"
 	"github.com/mistic0xb/smolurl/internal/repository"
@@ -13,23 +16,37 @@ import (
 type SmolURLService struct {
 	server  *server.Server
 	urlRepo *repository.SmolURLRepository
+	node    *snowflake.Node
 }
 
 func NewSmolURLService(server *server.Server, urlRepo *repository.SmolURLRepository) *SmolURLService {
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		log.Fatalf("failed to start snowflake node: %v\n", err)
+	}
 	return &SmolURLService{
 		server:  server,
 		urlRepo: urlRepo,
+		node:    node,
 	}
 }
 
 func (s *SmolURLService) GenerateSmolURL(ctx echo.Context, payload *smolurl.GenerateSmolURLPayload) (*smolurl.SmolURL, error) {
-	// TODO: smolURL logic
+	expiresAt := time.Now().Add(30 * time.Minute)
+	id := s.node.Generate()
 
-	return &smolurl.SmolURL{
-		ID:             uuid.New(),
-		OriginalURL:    payload.OriginalURL,
-		ShortURL:       payload.OriginalURL[:7],
-		ExpirationTime: time.Now().Add(1 * time.Hour),
-		CreatedAt:      time.Now(),
-	}, nil
+	smolURLCode := string(base62.FormatUint(uint64(id)))
+	smolURL := fmt.Sprintf("https://smolurl.mistic.xyz/%v", smolURLCode)
+
+	smolURLItem, err := s.urlRepo.CreateSmolURL(ctx.Request().Context(), &smolurl.SmolURL{
+		ID:          uint64(id),
+		OriginalURL: payload.OriginalURL,
+		SmolURL:     smolURL,
+		ExpiresAt:   expiresAt,
+		CreatedAt:   time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return smolURLItem, nil
 }
