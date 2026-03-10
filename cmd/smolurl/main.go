@@ -37,7 +37,7 @@ func main() {
 	repos := repository.NewRepositories(srv)
 
 	// Init services
-	services, err := service.NewServices(srv, repos)
+	services := service.NewServices(srv, repos)
 
 	// Init handlers
 	handlers := handler.NewHandlers(srv, services)
