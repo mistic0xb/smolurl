@@ -6,13 +6,10 @@ import (
 )
 
 func registerSmolURLRoutes(r *echo.Group, h *handler.SmolURLHandler) {
-	// Todo operations
+	//  url operations
 	urls := r.Group("/url")
 
-	// Collection operations
+	// create operations
 	urls.POST("", h.GenerateSmolURL)
 
-	// // Individual todo operations
-	// dynamicTodo := urls.Group("/:id")
-	// dynamicTodo.GET("", h.GetTodoByID)
 }

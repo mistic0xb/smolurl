@@ -8,10 +8,10 @@ import (
 	v1 "github.com/mistic0xb/smolurl/internal/routes/v1"
 	"github.com/mistic0xb/smolurl/internal/server"
 	"github.com/mistic0xb/smolurl/internal/service"
-	"golang.org/x/time/rate"
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
+	"golang.org/x/time/rate"
 )
 
 func NewRouter(s *server.Server, h *handler.Handlers, services *service.Services) *echo.Echo {
