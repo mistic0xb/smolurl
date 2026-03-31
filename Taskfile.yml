@@ -1,23 +1,64 @@
-version: "3"
+version: '3'
+
+vars:
+  SMOLURL_DB_DSN: 'postgres://postgres:secret@localhost:5431/smolurls?sslmode=disable'
 
 tasks:
   help:
     desc: print this help message
     cmds:
-      - task --list-all
+    - task --list-all
     silent: true
 
-  run:
-    desc: run smolurl 
+  confirm:
+    desc: confirmation prompt
+    internal: true
+    silent: true
     cmds:
-      - go run ./cmd/smolurl
+    - |
+      echo -n 'Are you sure? [y/N] ' && read ans && [ ${ans:-N} = y ]
+
+  run:
+    desc: run the application
+    cmds:
+    - go run ./cmd/smolurl
+
+  build:
+    desc: build the binary
+    cmds:
+    - go build -o bin/smolurl ./cmd/smolurl
+
+  migrations:new:
+    desc: create a new database migration
+    vars:
+      NAME: '{{.name | default ""}}'
+    cmds:
+    - |
+      if [ -z "{{.NAME}}" ]; then
+        echo "Error: name parameter is required"
+        echo "Usage: task migrations:new name=migration_name"
+        exit 1
+      fi
+    - echo 'Creating migration file for {{.NAME}}...'
+    - tern new -m ./internal/database/migrations {{.NAME}}
+
+  migrations:up:
+    desc: apply all pending migrations
+    deps: [confirm]
+    cmds:
+    - echo 'Running migrations...'
+    - tern migrate -m ./internal/database/migrations --conn-string {{.SMOLURL_DB_DSN}}
+
+  migrations:down:
+    desc: roll back one migration
+    deps: [confirm]
+    cmds:
+    - echo 'Rolling back migration...'
+    - tern migrate -m ./internal/database/migrations --conn-string {{.SMOLURL_DB_DSN}} --destination -1
 
   tidy:
-    desc: format all .go files, and tidy and vendor module dependencies
+    desc: format .go files and tidy dependencies
     cmds:
-      - echo 'Formatting .go files...'
-      - go fmt ./...
-      - echo 'Tidying module dependencies...'
-      - go mod tidy
-      - echo 'Verifying dependencies...'
-      - go mod verify
+    - go fmt ./...
+    - go mod tidy
+    - go mod verify

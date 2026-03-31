@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -36,12 +35,11 @@ func (s *SmolURLService) GenerateSmolURL(ctx echo.Context, payload *smolurl.Gene
 	id := s.node.Generate()
 
 	smolURLCode := string(base62.FormatUint(uint64(id)))
-	smolURL := fmt.Sprintf("https://smolurl.mistic.xyz/%v", smolURLCode)
 
 	smolURLItem, err := s.urlRepo.CreateSmolURL(ctx.Request().Context(), &smolurl.SmolURL{
 		ID:          uint64(id),
 		OriginalURL: payload.OriginalURL,
-		SmolURL:     smolURL,
+		SmolURL:     smolURLCode,
 		ExpiresAt:   expiresAt,
 		CreatedAt:   time.Now(),
 	})
@@ -49,4 +47,13 @@ func (s *SmolURLService) GenerateSmolURL(ctx echo.Context, payload *smolurl.Gene
 		return nil, err
 	}
 	return smolURLItem, nil
+}
+
+func (s *SmolURLService) GetOriginalURL(ctx echo.Context, smolurlCode string) (string, error) {
+	originalURL, err := s.urlRepo.GetOriginalURL(ctx.Request().Context(), smolurlCode)
+	if err != nil {
+		log.Fatalf("ERROR getting original url: %v", err)
+	}
+
+	return originalURL, nil
 }

@@ -11,5 +11,4 @@ func registerSmolURLRoutes(r *echo.Group, h *handler.SmolURLHandler) {
 
 	// create operations
 	urls.POST("", h.GenerateSmolURL)
-
 }

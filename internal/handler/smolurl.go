@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	smolurl "github.com/mistic0xb/smolurl/internal/model/smolurl"
@@ -36,4 +37,17 @@ func (h *SmolURLHandler) GenerateSmolURL(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, res)
+}
+
+// takes smolURL string -> decodes it -> query the db with that id -> redirect 302
+func (h *SmolURLHandler) GetUrlByID(c echo.Context) error {
+	smolURLCode := c.Param("id")
+
+	// get the original url
+	originalURL, err := h.smolURLService.GetOriginalURL(c, smolURLCode)
+	if err != nil {
+		log.Fatalf("ERROR getting originalURL from smolURL: %v", err)
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, originalURL)
 }

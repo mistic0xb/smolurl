@@ -11,9 +11,10 @@ export const options = {
             maxVUs: 5000,
             stages: [
                 { duration: '30s', target: 100 },
-                { duration: '1m', target: 1000 },
+                { duration: '1m', target: 500 },
+                { duration: '1m', target: 1500 },
+                { duration: '1m', target: 2000 },
                 { duration: '1m', target: 3000 },
-                { duration: '1m', target: 5000 },
                 { duration: '30s', target: 0 },
             ],
         },
@@ -24,7 +25,7 @@ export const options = {
     },
 };
 
-export default function() {
+export default function () {
     const res = http.post(
         'http://localhost:8080/api/v1/url',
         JSON.stringify({

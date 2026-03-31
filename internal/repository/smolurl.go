@@ -58,3 +58,19 @@ func (r *SmolURLRepository) CreateSmolURL(ctx context.Context, payload *smolurl.
 
 	return &smolURLItem, nil
 }
+
+func (r *SmolURLRepository) GetOriginalURL(ctx context.Context, smolURLCode string) (string, error) {
+	fmt.Println("REPO smolurl:", smolURLCode)
+	stmt := `SELECT original_url FROM smolurls WHERE smol_url = $1`
+	var originalURL string
+	err := r.server.DB.Pool.QueryRow(ctx, stmt, smolURLCode).Scan(&originalURL)
+
+	if err != nil {
+		log.Fatal(err)
+		return "", fmt.Errorf("failed to execute getOriginalURL query for smol_url=%v: %v", smolURLCode, err)
+	}
+
+	fmt.Println("OriginalURL:", originalURL)
+
+	return originalURL, nil
+}
