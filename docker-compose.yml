@@ -5,7 +5,7 @@ services:
     init: true
     depends_on:
       pg-db:
-          condition: service_healthy
+        condition: service_healthy
     volumes:
       - ./config.yml:/app/config.yml:ro
       - ./internal/database/migrations:/app/migrations:ro
@@ -16,6 +16,14 @@ services:
     ports:
       - 8080:8080
     restart: on-failure:3
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
   pg-db:
     image: postgres:18-alpine
@@ -33,9 +41,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
 networks:
-   smolurl-net:
-     
+  smolurl-net:
+
 volumes:
-   pgdata:
+  pgdata:
