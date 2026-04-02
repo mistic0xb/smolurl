@@ -19,7 +19,6 @@ RUN go build \
 FROM scratch 
 
 COPY --from=build /bin/smolurl-server /bin/smolurl-server
-COPY --from=build /app/config.yml /app/config.yml
 
 EXPOSE 8080
 
