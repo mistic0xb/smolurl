@@ -2,64 +2,72 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
-	"github.com/mistic0xb/smolurl/internal/logger"
+	"github.com/joho/godotenv"
 	"github.com/mistic0xb/smolurl/internal/utils"
-	"github.com/spf13/viper"
+	"github.com/rs/zerolog"
+
+	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/v2"
 )
 
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server" validate:"required"`
-	Database DatabaseConfig `mapstructure:"database" validate:"required"`
-	Redis    RedisConfig    `mapstructure:"redis" validate:"required"`
+	Server   ServerConfig   `koanf:"server" validate:"required"`
+	Database DatabaseConfig `koanf:"database" validate:"required"`
+	Redis    RedisConfig    `koanf:"redis" validate:"required"`
 }
 
 type ServerConfig struct {
-	Port               string   `mapstructure:"port" validate:"required"`
-	ReadTimeout        int      `mapstructure:"read_timeout" validate:"required"`
-	WriteTimeout       int      `mapstructure:"write_timeout" validate:"required"`
-	IdleTimeout        int      `mapstructure:"idle_timeout" validate:"required"`
-	CORSAllowedOrigins []string `mapstructure:"cors_allowed_origins" validate:"required"`
+	Port               string   `koanf:"port" validate:"required"`
+	ReadTimeout        int      `koanf:"read_timeout" validate:"required"`
+	WriteTimeout       int      `koanf:"write_timeout" validate:"required"`
+	IdleTimeout        int      `koanf:"idle_timeout" validate:"required"`
+	CORSAllowedOrigins []string `koanf:"cors_allowed_origins" validate:"required"`
 }
 
 type DatabaseConfig struct {
-	Host            string `mapstructure:"host" validate:"required"`
-	Port            int    `mapstructure:"port" validate:"required"`
-	User            string `mapstructure:"user" validate:"required"`
-	Password        string `mapstructure:"password"`
-	Name            string `mapstructure:"name" validate:"required"`
-	SSLMode         string `mapstructure:"ssl_mode" validate:"required"`
-	MaxOpenConns    int    `mapstructure:"max_open_conns" validate:"required"`
-	MaxIdleConns    int    `mapstructure:"max_idle_conns" validate:"required"`
-	ConnMaxLifetime int    `mapstructure:"conn_max_lifetime" validate:"required"`
-	ConnMaxIdleTime int    `mapstructure:"conn_max_idle_time" validate:"required"`
+	Host            string `koanf:"host" validate:"required"`
+	Port            int    `koanf:"port" validate:"required"`
+	User            string `koanf:"user" validate:"required"`
+	Password        string `koanf:"password"`
+	Name            string `koanf:"name" validate:"required"`
+	SSLMode         string `koanf:"ssl_mode" validate:"required"`
+	MaxOpenConns    int    `koanf:"max_open_conns" validate:"required"`
+	MaxIdleConns    int    `koanf:"max_idle_conns" validate:"required"`
+	ConnMaxLifetime int    `koanf:"conn_max_lifetime" validate:"required"`
+	ConnMaxIdleTime int    `koanf:"conn_max_idle_time" validate:"required"`
 }
 
 type RedisConfig struct {
-	Address string `mapstructure:"address" validate:"required"`
+	Address  string `koanf:"address" validate:"required"`
+	Password string `koanf:"password" validate:"required"`
 }
 
 func LoadConfig() (*Config, error) {
-	logger := logger.NewLogger()
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
-	// Set config file path
-	viper.SetConfigName("config")
-	viper.SetConfigType("yml")
-	viper.AddConfigPath("/app")  
-	viper.AddConfigPath(".")
+	var k = koanf.New(".")
 
-	viper.SetEnvPrefix("SMOLURL")
-	viper.AutomaticEnv()
-
-	// Read the config file
-	if err := viper.ReadInConfig(); err != nil {
-		logger.Error().Err(err).Msg("No .env file found, using env vars only")
-		return nil, err
+	// load .env file into OS env vars 
+	if err := godotenv.Load(); err != nil {
+		logger.Warn().Msg(".env file not found, using OS env vars")
 	}
+
+	// load actual env vars (overrides .env)
+	k.Load(env.Provider("", ".", func(s string) string {
+		s = strings.ToLower(s)
+		parts := strings.SplitN(s, "_", 2)
+		if len(parts) == 2 {
+			return parts[0] + "." + parts[1]
+		}
+		return s
+	}), nil)
 
 	// Unmarshal config into struct
 	cfg := &Config{}
-	if err := viper.Unmarshal(cfg); err != nil {
+	if err := k.Unmarshal("", cfg); err != nil {
 		logger.Error().Err(err).Msg("Unable to unmarshal to config struct")
 		return nil, err
 	}
