@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mistic0xb/smolurl/internal/config"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/tern/v2/migrate"
 	"github.com/rs/zerolog"
 )
 
@@ -48,7 +51,7 @@ func New(cfg *config.Config, logger *zerolog.Logger) (*Database, error) {
 		log:  logger,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), DatabasePingTimeout*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), DatabasePingTimeout)
 	defer cancel()
 	if err = pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
@@ -57,6 +60,30 @@ func New(cfg *config.Config, logger *zerolog.Logger) (*Database, error) {
 	logger.Info().Msg("connected to the database")
 
 	return database, nil
+}
+
+func (db *Database) RunMigrations(ctx context.Context) error {
+	conn, err := db.Pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire connection for migrations: %w", err)
+	}
+	defer conn.Release()
+
+	m, err := migrate.NewMigrator(ctx, conn.Conn(), "schema_version")
+	if err != nil {
+		return fmt.Errorf("failed to create migrator: %w", err)
+	}
+
+	if err := m.LoadMigrations(os.DirFS("/app/migrations")); err != nil {
+		return fmt.Errorf("failed to load migrations: %w", err)
+	}
+
+	if err := m.Migrate(ctx); err != nil {
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+
+	db.log.Info().Msg("migrations applied successfully")
+	return nil
 }
 
 func (db *Database) Close() error {

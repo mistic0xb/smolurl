@@ -45,6 +45,7 @@ func LoadConfig() (*Config, error) {
 	// Set config file path
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
+	viper.AddConfigPath("/app")  
 	viper.AddConfigPath(".")
 
 	viper.SetEnvPrefix("SMOLURL")

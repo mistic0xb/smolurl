@@ -26,6 +26,13 @@ func New(cfg *config.Config, logger *zerolog.Logger) (*Server, error) {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
+	// Run migrations before anything else
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := db.RunMigrations(ctx); err != nil {
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
+	}
+
 	server := &Server{
 		Config: cfg,
 		Logger: logger,
