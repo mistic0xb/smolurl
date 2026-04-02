@@ -1,0 +1,41 @@
+services:
+  server:
+    image: server
+    build: .
+    init: true
+    depends_on:
+      pg-db:
+          condition: service_healthy
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+      - ./internal/database/migrations:/app/migrations:ro
+    environment:
+      - CONFIG_PATH=/app/config.yml
+    networks:
+      - smolurl-net
+    ports:
+      - 8080:8080
+    restart: on-failure:3
+
+  pg-db:
+    image: postgres:18-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=smolurls
+    networks:
+      - smolurl-net
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d smolurls"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+   smolurl-net:
+     
+volumes:
+   pgdata:
