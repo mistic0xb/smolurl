@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -20,7 +21,7 @@ func NewSmolURLRepository(server *server.Server) *SmolURLRepository {
 
 func (r *SmolURLRepository) CreateSmolURL(ctx context.Context, payload *smolurl.SmolURL) (*smolurl.SmolURL, error) {
 	stmt := `
-		INSERT INTO 
+		INSERT INTO
 			smolurls (
 				id,
 				original_url,
@@ -60,17 +61,16 @@ func (r *SmolURLRepository) CreateSmolURL(ctx context.Context, payload *smolurl.
 }
 
 func (r *SmolURLRepository) GetOriginalURL(ctx context.Context, smolURLCode string) (string, error) {
-	fmt.Println("REPO smolurl:", smolURLCode)
-	stmt := `SELECT original_url FROM smolurls WHERE smol_url = $1`
+	stmt := `SELECT original_url FROM smolurls WHERE smol_url = $1 AND expires_at > CURRENT_TIMESTAMP`
 	var originalURL string
 	err := r.server.DB.Pool.QueryRow(ctx, stmt, smolURLCode).Scan(&originalURL)
 
 	if err != nil {
-		log.Fatal(err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", fmt.Errorf("url not found or expired")
+		}
 		return "", fmt.Errorf("failed to execute getOriginalURL query for smol_url=%v: %v", smolURLCode, err)
 	}
-
-	fmt.Println("OriginalURL:", originalURL)
 
 	return originalURL, nil
 }

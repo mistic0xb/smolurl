@@ -9,7 +9,6 @@ import (
 	"github.com/mistic0xb/smolurl/internal/model/smolurl"
 	"github.com/mistic0xb/smolurl/internal/repository"
 	"github.com/mistic0xb/smolurl/internal/server"
-	"github.com/redis/go-redis/v9"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/jxskiss/base62"
@@ -62,10 +61,6 @@ func (s *SmolURLService) GetOriginalURL(ctx echo.Context, smolurlCode string) (s
 	if err == nil {
 		logger.Debug().Str("code", smolurlCode).Msg("cache hit")
 		return originalURL, nil
-	}
-
-	if err != redis.Nil {
-		logger.Warn().Err(err).Str("code", smolurlCode).Msg("redis error, falling back to db")
 	}
 
 	originalURL, err = s.urlRepo.GetOriginalURL(ctx.Request().Context(), smolurlCode)
