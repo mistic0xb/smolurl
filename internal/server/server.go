@@ -10,6 +10,7 @@ import (
 	"github.com/mistic0xb/smolurl/internal/config"
 	"github.com/mistic0xb/smolurl/internal/database"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 )
 
@@ -17,19 +18,36 @@ type Server struct {
 	Config     *config.Config
 	Logger     *zerolog.Logger
 	DB         *database.Database
+	Redis      *redis.Client
 	httpServer *http.Server
 }
 
 func New(cfg *config.Config, logger *zerolog.Logger) (*Server, error) {
+	// Init Database
 	db, err := database.New(cfg, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	// Run migrations before anything else
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// Redis client
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Address,
+		Password: cfg.Redis.Password,
+		DB:       0,
+	})
+
+	// Test Redis connection
+	redisCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := db.RunMigrations(ctx); err != nil {
+
+	if err := redisClient.Ping(redisCtx).Err(); err != nil {
+		logger.Error().Err(err).Msg("Failed to connect to Redis, continuing without Redis")
+	}
+
+	// Run migrations before anything else
+	migrationCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := db.RunMigrations(migrationCtx); err != nil {
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
@@ -37,6 +55,7 @@ func New(cfg *config.Config, logger *zerolog.Logger) (*Server, error) {
 		Config: cfg,
 		Logger: logger,
 		DB:     db,
+		Redis:  redisClient,
 	}
 
 	return server, nil

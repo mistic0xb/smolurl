@@ -1,16 +1,22 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/mistic0xb/smolurl/internal/middleware"
+	"github.com/mistic0xb/smolurl/internal/model/smolurl"
+	"github.com/mistic0xb/smolurl/internal/repository"
+	"github.com/mistic0xb/smolurl/internal/server"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/jxskiss/base62"
 	"github.com/labstack/echo/v4"
-	"github.com/mistic0xb/smolurl/internal/model/smolurl"
-	"github.com/mistic0xb/smolurl/internal/repository"
-	"github.com/mistic0xb/smolurl/internal/server"
 )
+
+const CACHE_TTL = 5 * time.Minute
 
 type SmolURLService struct {
 	server  *server.Server
@@ -50,10 +56,27 @@ func (s *SmolURLService) GenerateSmolURL(ctx echo.Context, payload *smolurl.Gene
 }
 
 func (s *SmolURLService) GetOriginalURL(ctx echo.Context, smolurlCode string) (string, error) {
-	originalURL, err := s.urlRepo.GetOriginalURL(ctx.Request().Context(), smolurlCode)
-	if err != nil {
-		log.Fatalf("ERROR getting original url: %v", err)
+	logger := middleware.GetLogger(ctx)
+
+	originalURL, err := s.server.Redis.Get(ctx.Request().Context(), smolurlCode).Result()
+	if err == nil {
+		logger.Debug().Str("code", smolurlCode).Msg("cache hit")
+		return originalURL, nil
 	}
+
+	if err != redis.Nil {
+		logger.Warn().Err(err).Str("code", smolurlCode).Msg("redis error, falling back to db")
+	}
+
+	originalURL, err = s.urlRepo.GetOriginalURL(ctx.Request().Context(), smolurlCode)
+	if err != nil {
+		return "", fmt.Errorf("failed to get original url: %w", err)
+	}
+
+	if err := s.server.Redis.Set(ctx.Request().Context(), smolurlCode, originalURL, CACHE_TTL).Err(); err != nil {
+		logger.Warn().Err(err).Str("code", smolurlCode).Msg("failed to cache url")
+	}
+	logger.Debug().Str("code", smolurlCode).Msg("cache miss, stored in cache")
 
 	return originalURL, nil
 }

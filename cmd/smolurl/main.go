@@ -33,7 +33,7 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to initialize server")
 	}
 
-	// TOOD: Init repos
+	// Init repos
 	repos := repository.NewRepositories(srv)
 
 	// Init services
