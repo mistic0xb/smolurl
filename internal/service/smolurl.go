@@ -75,3 +75,18 @@ func (s *SmolURLService) GetOriginalURL(ctx echo.Context, smolurlCode string) (s
 
 	return originalURL, nil
 }
+
+func (s *SmolURLService) GetTopURLs(ctx echo.Context, page int) (smolurl.PaginatedTopSmolURLsResponse, error) {
+	var offset int = page * 10
+	smolURLs, err := s.urlRepo.GetTopURL(ctx.Request().Context(), offset)
+	if err != nil {
+		return smolurl.PaginatedTopSmolURLsResponse{}, fmt.Errorf("failed: getTopURLs service, err:%v", err)
+	}
+
+	var paginatedResponse = smolurl.PaginatedTopSmolURLsResponse{
+		Data: smolURLs,
+		Page: page,
+	}
+
+	return paginatedResponse, nil
+}

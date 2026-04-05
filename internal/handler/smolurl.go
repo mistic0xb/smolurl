@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	smolurl "github.com/mistic0xb/smolurl/internal/model/smolurl"
 	"github.com/mistic0xb/smolurl/internal/server"
@@ -50,4 +52,17 @@ func (h *SmolURLHandler) GetUrlByID(c echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusTemporaryRedirect, originalURL)
+}
+
+func (h *SmolURLHandler) GetTopURLs(c echo.Context) error {
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil || page < 0 || page > 4 {
+		return echo.NewHTTPError(http.StatusBadGateway, "invalid page number")
+	}
+	topURLs, err := h.smolURLService.GetTopURLs(c, page)
+	if err != nil {
+		return fmt.Errorf("error getting topURLs: %w", err)
+	}
+
+	return c.JSON(http.StatusOK, topURLs)
 }

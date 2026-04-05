@@ -11,4 +11,7 @@ func registerSmolURLRoutes(r *echo.Group, h *handler.SmolURLHandler) {
 
 	// create operations
 	urls.POST("", h.GenerateSmolURL)
+
+	// get top URLs
+	urls.GET("/top", h.GetTopURLs)
 }
