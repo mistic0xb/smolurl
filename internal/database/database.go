@@ -2,10 +2,11 @@ package database
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
@@ -62,6 +63,8 @@ func New(cfg *config.Config, logger *zerolog.Logger) (*Database, error) {
 	return database, nil
 }
 
+//go:embed migrations/*.sql
+var migrationsFS embed.FS
 func (db *Database) RunMigrations(ctx context.Context) error {
 	conn, err := db.Pool.Acquire(ctx)
 	if err != nil {
@@ -74,7 +77,11 @@ func (db *Database) RunMigrations(ctx context.Context) error {
 		return fmt.Errorf("failed to create migrator: %w", err)
 	}
 
-	if err := m.LoadMigrations(os.DirFS("/app/migrations")); err != nil {
+	subFS, err := fs.Sub(migrationsFS, "migrations")
+	if err != nil {
+		return fmt.Errorf("failed to get migrations subFS: %w", err)
+	}
+	if err := m.LoadMigrations(subFS); err != nil {
 		return fmt.Errorf("failed to load migrations: %w", err)
 	}
 
