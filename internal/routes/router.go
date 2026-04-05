@@ -22,21 +22,21 @@ func NewRouter(s *server.Server, h *handler.Handlers, services *service.Services
 	router.HTTPErrorHandler = middlewares.Global.GlobalErrorHandler
 
 	router.Use(
-			// rate limit
-			echoMiddleware.RateLimiterWithConfig(echoMiddleware.RateLimiterConfig{
-				Store: echoMiddleware.NewRateLimiterMemoryStore(rate.Limit(20)),
-				DenyHandler: func(c echo.Context, identifier string, err error) error {
-					s.Logger.Warn().
-						Str("request_id", middleware.GetRequestID(c)).
-						Str("identifier", identifier).
-						Str("path", c.Path()).
-						Str("method", c.Request().Method).
-						Str("ip", c.RealIP()).
-						Msg("rate limit exceeded")
+		// rate limit
+		echoMiddleware.RateLimiterWithConfig(echoMiddleware.RateLimiterConfig{
+			Store: echoMiddleware.NewRateLimiterMemoryStore(rate.Limit(20)),
+			DenyHandler: func(c echo.Context, identifier string, err error) error {
+				s.Logger.Warn().
+					Str("request_id", middleware.GetRequestID(c)).
+					Str("identifier", identifier).
+					Str("path", c.Path()).
+					Str("method", c.Request().Method).
+					Str("ip", c.RealIP()).
+					Msg("rate limit exceeded")
 
-					return echo.NewHTTPError(http.StatusTooManyRequests, "Rate limit exceeded")
-				},
-			}),
+				return echo.NewHTTPError(http.StatusTooManyRequests, "Rate limit exceeded")
+			},
+		}),
 
 		// check CORS
 		middlewares.Global.CORS(),
@@ -54,6 +54,11 @@ func NewRouter(s *server.Server, h *handler.Handlers, services *service.Services
 
 	// register system routes
 	registerSystemRoutes(router, h)
+
+	// handle favicon
+	router.GET("/favicon.ico", func(c echo.Context) error {
+		return c.NoContent(http.StatusNoContent)
+	})
 
 	// smolURL redirect
 	router.GET("/:id", h.SmolURL.GetUrlByID)
