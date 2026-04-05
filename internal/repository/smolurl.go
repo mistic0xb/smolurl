@@ -61,7 +61,7 @@ func (r *SmolURLRepository) CreateSmolURL(ctx context.Context, payload *smolurl.
 }
 
 func (r *SmolURLRepository) GetOriginalURL(ctx context.Context, smolURLCode string) (string, error) {
-	stmt := `SELECT original_url FROM smolurls WHERE smol_url = $1 AND expires_at > CURRENT_TIMESTAMP`
+	stmt := `SELECT original_url FROM smolurls WHERE smol_url = $1 AND expires_at > NOW()`
 	var originalURL string
 	err := r.server.DB.Pool.QueryRow(ctx, stmt, smolURLCode).Scan(&originalURL)
 
@@ -73,4 +73,26 @@ func (r *SmolURLRepository) GetOriginalURL(ctx context.Context, smolURLCode stri
 	}
 
 	return originalURL, nil
+}
+
+func (r *SmolURLRepository) GetTopURL(ctx context.Context, offset int) ([]smolurl.PaginatedSmolURL, error) {
+	stmt := `
+		SELECT original_url,smol_url,created_at FROM smolurls
+		ORDER BY id, expires_at
+		LIMIT 10 OFFSET $1
+		`
+	rows, err := r.server.DB.Pool.Query(ctx, stmt, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute getTopURL")
+	}
+
+	smolURLs, err := pgx.CollectRows(rows, pgx.RowToStructByName[smolurl.PaginatedSmolURL])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []smolurl.PaginatedSmolURL{}, nil
+		}
+		return nil, fmt.Errorf("failed to collect rows from table:smolurls for offset=%v: %w", offset, err)
+	}
+
+	return smolURLs, nil
 }
