@@ -9,7 +9,9 @@ import (
 	"github.com/mistic0xb/smolurl/internal/server"
 	"github.com/mistic0xb/smolurl/internal/service"
 
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
+
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"golang.org/x/time/rate"
 )
@@ -22,6 +24,15 @@ func NewRouter(s *server.Server, h *handler.Handlers, services *service.Services
 	router.HTTPErrorHandler = middlewares.Global.GlobalErrorHandler
 
 	router.Use(
+		// metrics
+		echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{
+			Subsystem: "smolurl",
+			Skipper: func(c echo.Context) bool {
+				p := c.Request().URL.Path
+				return p == "/metrics" || p == "/favicon.ico" || p == "/api/status"
+			},
+		}),
+
 		// rate limit
 		echoMiddleware.RateLimiterWithConfig(echoMiddleware.RateLimiterConfig{
 			Store: echoMiddleware.NewRateLimiterMemoryStore(rate.Limit(20)),

@@ -39,7 +39,6 @@ services:
       --maxmemory 512mb
       --maxmemory-policy allkeys-lfu
     # --requirepass ${REDIS_PASSWORD}
-     
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -82,9 +81,36 @@ services:
           cpus: "0.5"
           memory: 512M
 
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - smolurl-net
+    ports:
+      - 9090:9090
+    restart: always
+  
+  grafana:
+      image: grafana/grafana:latest
+      networks:
+        - smolurl-net
+      ports:
+        - 3000:3000
+      volumes:
+        - grafana_data:/var/lib/grafana
+      environment:
+        - GF_SECURITY_ADMIN_PASSWORD=admin
+      depends_on:
+        - prometheus
+      restart: always
+
 networks:
   smolurl-net:
 
 volumes:
   pgdata:
   redis_data:
+  prometheus_data:
+  grafana_data:
