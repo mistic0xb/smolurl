@@ -106,6 +106,32 @@ services:
         - prometheus
       restart: always
 
+  loki:
+    image: grafana/loki:latest
+    networks:
+      - smolurl-net
+    ports:
+      - 3100:3100
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: always
+  
+  alloy:
+    image: grafana/alloy:latest
+    networks:
+      - smolurl-net
+    volumes:
+      - ./alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    ports:
+      - 12345:12345  
+    depends_on:
+      - loki
+    restart: always
+
 networks:
   smolurl-net:
 
@@ -114,3 +140,4 @@ volumes:
   redis_data:
   prometheus_data:
   grafana_data:
+  loki_data:

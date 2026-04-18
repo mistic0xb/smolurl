@@ -19,11 +19,14 @@ func NewLogger() zerolog.Logger {
 	zerolog.TimeFieldFormat = "2006-01-02 15:04:05"
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
+
+	// TODO: switch log format from json -> pretty 
 	// Development: pretty console logs
-	var writer = zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: "2006-01-02 15:04:05",
-	}
+	// var writer = zerolog.ConsoleWriter{
+	// 	Out:        os.Stdout,
+	// 	TimeFormat: "2006-01-02 15:04:05",
+	// }
+	var writer = os.Stdout
 
 	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
 		return path.Base(file) + ":" + strconv.Itoa(line)
