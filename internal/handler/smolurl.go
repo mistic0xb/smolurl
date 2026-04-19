@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -48,7 +47,7 @@ func (h *SmolURLHandler) GetUrlByID(c echo.Context) error {
 	// get the original url
 	originalURL, err := h.smolURLService.GetOriginalURL(c, smolURLCode)
 	if err != nil {
-		log.Fatalf("ERROR getting originalURL from smolURL: %v", err)
+		return err
 	}
 
 	return c.Redirect(http.StatusTemporaryRedirect, originalURL)

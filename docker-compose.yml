@@ -93,18 +93,18 @@ services:
     restart: always
   
   grafana:
-      image: grafana/grafana:latest
-      networks:
-        - smolurl-net
-      ports:
-        - 3000:3000
-      volumes:
-        - grafana_data:/var/lib/grafana
-      environment:
-        - GF_SECURITY_ADMIN_PASSWORD=admin
-      depends_on:
-        - prometheus
-      restart: always
+    image: grafana/grafana:latest
+    networks:
+      - smolurl-net
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    restart: always
 
   loki:
     image: grafana/loki:latest
@@ -127,9 +127,21 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
     ports:
-      - 12345:12345  
+      - 12345:12345
     depends_on:
       - loki
+    restart: always
+
+  tempo:
+    image: grafana/tempo:latest
+    networks:
+      - smolurl-net
+    ports:
+      - 3200:3200
+    command: -config.file=/etc/tempo/tempo.yaml
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
     restart: always
 
 networks:
@@ -141,3 +153,4 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  tempo_data:

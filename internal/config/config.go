@@ -14,9 +14,10 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `koanf:"server" validate:"required"`
-	Database DatabaseConfig `koanf:"database" validate:"required"`
-	Redis    RedisConfig    `koanf:"redis" validate:"required"`
+	Server     ServerConfig    `koanf:"server" validate:"required"`
+	Database   DatabaseConfig  `koanf:"database" validate:"required"`
+	Redis      RedisConfig     `koanf:"redis" validate:"required"`
+	Telemetry  TelemetryConfig `koanf:"telemetry"`
 }
 
 type ServerConfig struct {
@@ -45,12 +46,16 @@ type RedisConfig struct {
 	Password string `koanf:"password" validate:"required"`
 }
 
+type TelemetryConfig struct {
+	OTLPEndpoint string `koanf:"otlp_endpoint"`
+}
+
 func LoadConfig() (*Config, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
 	var k = koanf.New(".")
 
-	// load .env file into OS env vars 
+	// load .env file into OS env vars
 	if err := godotenv.Load(); err != nil {
 		logger.Warn().Msg(".env file not found, using OS env vars")
 	}

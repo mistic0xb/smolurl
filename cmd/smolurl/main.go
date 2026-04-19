@@ -15,6 +15,7 @@ import (
 	"github.com/mistic0xb/smolurl/internal/routes"
 	"github.com/mistic0xb/smolurl/internal/server"
 	"github.com/mistic0xb/smolurl/internal/service"
+	"github.com/mistic0xb/smolurl/internal/telemetry"
 )
 
 const DefaultContextTimeout = 30
@@ -48,6 +49,13 @@ func main() {
 	srv.SetupHTTPServer(r)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+
+	// Tracer:
+	tp, err := telemetry.NewTracerProvider(ctx, cfg.Telemetry.OTLPEndpoint)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to initialize tracer provider")
+	}
+	srv.TracerProvider = tp
 
 	// Start server
 	go func() {

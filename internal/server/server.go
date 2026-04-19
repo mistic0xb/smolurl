@@ -12,14 +12,16 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 type Server struct {
-	Config     *config.Config
-	Logger     *zerolog.Logger
-	DB         *database.Database
-	Redis      *redis.Client
-	httpServer *http.Server
+	Config         *config.Config
+	Logger         *zerolog.Logger
+	DB             *database.Database
+	Redis          *redis.Client
+	httpServer     *http.Server
+	TracerProvider *sdktrace.TracerProvider
 }
 
 func New(cfg *config.Config, logger *zerolog.Logger) (*Server, error) {
@@ -85,6 +87,12 @@ func (s *Server) Start() error {
 func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.httpServer.Shutdown(ctx); err != nil {
 		return fmt.Errorf("failed to shutdown HTTP server: %w", err)
+	}
+
+	if s.TracerProvider != nil {
+		if err := s.TracerProvider.Shutdown(ctx); err != nil {
+			return fmt.Errorf("failed to shutdown tracer provider: %w", err)
+		}
 	}
 
 	if err := s.DB.Close(); err != nil {

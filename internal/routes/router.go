@@ -14,6 +14,7 @@ import (
 
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"golang.org/x/time/rate"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 )
 
 func NewRouter(s *server.Server, h *handler.Handlers, services *service.Services) *echo.Echo {
@@ -32,6 +33,8 @@ func NewRouter(s *server.Server, h *handler.Handlers, services *service.Services
 				return p == "/metrics" || p == "/favicon.ico" || p == "/api/status"
 			},
 		}),
+
+		otelecho.Middleware("smolurl"),
 
 		// rate limit
 		echoMiddleware.RateLimiterWithConfig(echoMiddleware.RateLimiterConfig{
